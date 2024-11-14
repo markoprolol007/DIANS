@@ -1,13 +1,9 @@
 import time
-
 from bs4 import BeautifulSoup
 import requests
 import pandas as pd
 from datetime import datetime
-
-scrape = requests.get('https://www.mse.mk/mk/stats/symbolhistory/kmb')
-soup = BeautifulSoup(scrape.text, 'html.parser')
-
+from concurrent.futures import ThreadPoolExecutor
 
 def get_data_for(code, startDate, endDate):
     url = 'https://www.mse.mk/mk/stats/symbolhistory/' + code
@@ -21,11 +17,8 @@ def get_data_for(code, startDate, endDate):
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-    
         headers = [th.text.strip() for th in soup.find_all('th')]
-
         column_row = soup.findAll('tr')[1:]
-
         table = soup.find('table')
 
         if table:
@@ -46,26 +39,34 @@ def get_data_for(code, startDate, endDate):
         print('Error')
         return pd.DataFrame()
 
+def fetch_data_for_year(year, names, start, end):
+    start_date = start.replace(year=start.year + year)
+    end_date = start.replace(year=start.year + year + 1)
+    data_frames = []
+
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(get_data_for, name, start_date, end_date) for name in names]
+        for future in futures:
+            df = future.result()
+            if not df.empty:
+                data_frames.append(df)
+
+    return data_frames
 
 end = datetime.now()
 start = end.replace(year=end.year - 10)
-
+scrape = requests.get('https://www.mse.mk/mk/stats/symbolhistory/kmb')
+soup = BeautifulSoup(scrape.text, 'html.parser')
 names = [option.text for option in soup.find_all('option') if not any(char.isdigit() for char in option.text)]
 
-all_data = pd.DataFrame()
-
+all_data = []
 startTime = time.time()
 
 for year in range(10):
-    start_date = start.replace(year=start.year + year)
-    end_date = start.replace(year=start.year + year + 1)
+    all_data.extend(fetch_data_for_year(year, names, start, end))
 
-    for name in names:
-        df = get_data_for(name, start_date, end_date)
-        all_data = pd.concat([all_data, df], ignore_index=True)
-
-all_data.to_csv('data.csv', index=False)
+final_df = pd.concat(all_data, ignore_index=True)
+final_df.to_csv('data.csv', index=False)
 
 print('Data written to csv file')
-
 print(f"Execution completed in {time.time() - startTime:.2f} seconds.")
