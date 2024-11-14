@@ -21,10 +21,9 @@ def get_data_for(code, startDate, endDate):
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        # наслови на колоните
+    
         headers = [th.text.strip() for th in soup.find_all('th')]
 
-        # најди ги сите редови во табелата и прескокни го првиот
         column_row = soup.findAll('tr')[1:]
 
         table = soup.find('table')
@@ -32,7 +31,7 @@ def get_data_for(code, startDate, endDate):
         if table:
             rows = []
             for row in column_row:
-                row_data = row.find_all('td')  # најди ги сите полиња во редот
+                row_data = row.find_all('td')
                 if row_data:
                     individual_row_data = [pole.text.strip() for pole in row_data]
                     individual_row_data.insert(0, code)
@@ -49,10 +48,8 @@ def get_data_for(code, startDate, endDate):
 
 
 end = datetime.now()
-# почетокот е 10 години пред
 start = end.replace(year=end.year - 10)
 
-# имиња на сите издавачи филтрирани без тие со броеви
 names = [option.text for option in soup.find_all('option') if not any(char.isdigit() for char in option.text)]
 
 all_data = pd.DataFrame()
