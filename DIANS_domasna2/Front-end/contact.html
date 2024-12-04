@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - DIANS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        header {
+            background-color: #3BBA9C;
+            color: white;
+        }
+        header a, header button {
+            color: white;
+            text-decoration: none;
+            background-color: transparent;
+            border: none;
+        }
+        header a:hover, header button:hover {
+            text-decoration: underline;
+        }
+        footer {
+            background-color: #f8f9fa;
+            text-align: center;
+            padding: 10px 0;
+        }
+        body {
+            background-color: #2E3047;
+            color: white;
+        }
+        .contact-info {
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #444;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="d-flex justify-content-between align-items-center p-3">
+        <a href="index.html"><h1 class="ms-3">DIANS</h1></a>
+        <div class="me-3">
+            <button class="me-2" onclick="window.location.href='index.html'">Home</button>
+            <button class="me-2" onclick="window.location.href='stockAnalysis.html'">Stock Analysis</button>
+            <button><a href="contact.html">Contact</a></button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container my-5">
+        <h2 class="text-center mb-4">Contact Information</h2>
+        <div class="contact-info">
+            <p><strong>Ognen Trajkovski</strong></p>
+            <p>Phone: +38970348088</p>
+            <p>Email: <a href="mailto:marko.poposki@students.finki.ukim.mk">marko.poposki@students.finki.ukim.mk</a></p>
+        </div>
+
+        <div class="contact-info mt-4">
+            <p><strong>Marko Poposki</strong></p>
+            <p>Phone: +389 75445448</p>
+            <p>Email: <a href="mailto:ognen.trajkovski@students.ukim.mk">ognen.trajkovski@students.ukim.mk</a></p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+    style="color: #2E3047">
+        <p>&copy; 2024 DIANS</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
