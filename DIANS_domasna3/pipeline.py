@@ -8,13 +8,11 @@ from ta.trend import MACD, SMAIndicator, EMAIndicator, CCIIndicator
 from ta.volatility import BollingerBands
 
 def scrape_issuer_names():
-    """Scrape issuer names from the website."""
     response = requests.get('https://www.mse.mk/mk/stats/symbolhistory/kmb')
     soup = BeautifulSoup(response.text, 'html.parser')
     return [option.text for option in soup.find_all('option') if not any(char.isdigit() for char in option.text)]
 
 def get_data_for(code, start_date, end_date):
-    """Fetch data for a specific issuer and date range."""
     url = f'https://www.mse.mk/mk/stats/symbolhistory/{code}'
     data = {'FromDate': start_date.strftime('%d.%m.%Y'), 'ToDate': end_date.strftime('%d.%m.%Y'), 'Code': code}
     response = requests.post(url, data=data)
@@ -26,14 +24,12 @@ def get_data_for(code, start_date, end_date):
     return pd.DataFrame()
 
 def load_existing_data(filename='data.csv'):
-    """Load existing data from a CSV file."""
     try:
         return pd.read_csv(filename, parse_dates=['Датум'], dayfirst=True)
     except FileNotFoundError:
         return pd.DataFrame()
 
 def update_data_for_issuers(names, existing_data, filename='data.csv'):
-    """Update data for all issuers."""
     today = datetime.now()
     new_data = pd.DataFrame()
     for name in names:
@@ -43,23 +39,19 @@ def update_data_for_issuers(names, existing_data, filename='data.csv'):
     save_filtered_data(new_data, filename)
 
 def save_filtered_data(new_data, filename='data.csv'):
-    """Filter and save new data to the CSV file."""
     new_data = new_data[new_data['Количина'] != '0']
     append_mode = 'a' if pd.io.common.file_exists(filename) else 'w'
     new_data.to_csv(filename, mode=append_mode, index=False, header=append_mode == 'w')
 
 def filter_data(data):
-    """Filter data for rows where 'Количина' is not zero."""
-    data['Количина'] = pd.to_numeric(data['Количина'], errors='coerce')  # Ensure 'Количина' is numeric
+    data['Количина'] = pd.to_numeric(data['Количина'], errors='coerce')
     return data[data['Количина'] != 0]
 
 def sort_data(data):
-    """Sort data by issuer and date."""
     data['Датум'] = pd.to_datetime(data['Датум'], errors='coerce')
     return data.sort_values(['Име', 'Датум']).reset_index(drop=True)
 
 def main():
-    """Main pipeline for updating, processing, and saving data."""
     start_time = time.time()
     names = scrape_issuer_names()
     existing_data = load_existing_data()
