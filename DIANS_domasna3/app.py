@@ -1,41 +1,121 @@
+from datetime import date
 from flask import Flask, render_template, jsonify, request
 import pandas as pd
-from datetime import datetime
-import time
-from pipeline import scrape_issuer_names, load_existing_data, apply_technical_indicators
+import os
 
 app = Flask(__name__)
 
-# Route to render the homepage
+
+CSV_FILE_PATH = "appliedIndicators.csv"
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Route for stock analysis
-@app.route('/stock-analysis')
+@app.route('/stockAnalysis')
 def stock_analysis():
-    # Logic for stock analysis
-    stock_names = scrape_issuer_names()
-    data = load_existing_data()
-    data = apply_technical_indicators(data)
+    return render_template('stockAnalysis.html')
 
-    # Extract relevant stock signals (for now we're just showing a subset of the data)
-    stock_signals = {}
-    for name in stock_names:
-        stock_data = data[data['Име'] == name].iloc[-1]
-        stock_signal = generate_signal(stock_data)  # You need to define this logic
-        stock_signals[name] = stock_signal
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
 
-    return jsonify(stock_signals)
+@app.route('/get_stock_data', methods=['GET'])
+def get_stock_data():
+    if not os.path.exists(CSV_FILE_PATH):
+        return jsonify({"error": f"CSV file not found at {CSV_FILE_PATH}"}), 404
 
-def generate_signal(stock_data):
-    """Generate Buy/Hold/Sell signal based on indicators."""
-    # Example logic: you can extend this based on your requirements
-    if stock_data['RSI'] < 30:
-        return 'Buy'
-    elif stock_data['RSI'] > 70:
-        return 'Sell'
-    return 'Hold'
+    try:
+        df = pd.read_csv(CSV_FILE_PATH)
+        df['Датум'] = pd.to_datetime(df['Датум'], errors='coerce')
+        df = df.dropna(subset=['Датум'])
+        df = df.sort_values('Датум', ascending=False)
+        today = pd.to_datetime(date.today())
+        closest_date = df[df['Датум'] <= today]['Датум'].max()
+
+        if pd.isna(closest_date):
+            return jsonify({"error": "No stock data available"}), 404
+
+        stocks = df[df['Датум'] == closest_date][['Име', 'Цена на последна трансакција']]
+
+        stock_mapping = {
+            "ALK": "Алкалоид АД Скопје",
+            "KMB": "Комерцијална банка АД Скопје",
+            "MPT": "Макпетрол АД Скопје"
+        }
+
+        filtered_stocks = []
+        for _, row in stocks.iterrows():
+            stock_code = row['Име']
+            if stock_code in stock_mapping:
+                filtered_stocks.append({
+                    'name': stock_mapping[stock_code],
+                    'price': float(row['Цена на последна трансакција'])
+                })
+
+        return jsonify({
+            "date": closest_date.strftime('%d.%m.%Y'),
+            "stocks": filtered_stocks
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/get_dropdown_values', methods=['GET'])
+def get_dropdown_values():
+
+    if not os.path.exists(CSV_FILE_PATH):
+        return jsonify({"error": f"CSV file not found at {CSV_FILE_PATH}"}), 404
+
+    try:
+
+        df = pd.read_csv(CSV_FILE_PATH)
+        unique_values = df["Име"].dropna().unique().tolist()
+        return jsonify(unique_values)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/get_indicator_values', methods=['GET'])
+def get_indicator_values():
+    stock_name = request.args.get('stock_name')
+    if not stock_name:
+        return jsonify({"error": "Missing 'stock_name' query parameter"}), 400
+
+    if not os.path.exists(CSV_FILE_PATH):
+        return jsonify({"error": f"CSV file not found at {CSV_FILE_PATH}"}), 404
+
+    try:
+        df = pd.read_csv(CSV_FILE_PATH)
+        df['Датум'] = pd.to_datetime(df['Датум'], errors='coerce')
+        df = df.dropna(subset=['Датум'])
+        df = df.sort_values('Датум', ascending=False)
+        today = pd.to_datetime(date.today())
+        closest_date = df[df['Датум'] <= today]['Датум'].max()
+
+        if pd.isna(closest_date):
+            return jsonify({"error": "No indicator data available"}), 404
+
+        filtered_data = df[(df['Датум'] == closest_date) & (df['Име'] == stock_name)]
+
+        if filtered_data.empty:
+            return jsonify({"error": f"No data available for stock '{stock_name}'"}), 404
+
+        indicators = filtered_data[['RSI', 'CCI', 'Stochastic', 'MACD', 'SMA_20', 'SMA_50', 'EMA_20', 'EMA_50', 'Bollinger_Upper', 'Bollinger_Lower']].iloc[0].to_dict()
+        price = filtered_data['Цена на последна трансакција'].iloc[0]
+
+        return jsonify({
+            "date": closest_date.strftime('%d.%m.%Y'),
+            "stock_name": stock_name,
+            "price": price,
+            "indicators": indicators
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
