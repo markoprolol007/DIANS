@@ -15,7 +15,7 @@ def index():
 
 @app.route('/stockAnalysis')
 def stock_analysis():
-    return render_template('stockAnalysis.html')
+    return render_template('stock-analysis.html')
 
 @app.route('/contact')
 def contact():
