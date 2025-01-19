@@ -51,6 +51,27 @@ def sort_data(data):
     data['Датум'] = pd.to_datetime(data['Датум'], errors='coerce')
     return data.sort_values(['Име', 'Датум']).reset_index(drop=True)
 
+def apply_technical_indicators(data):
+    numeric_columns = ['Цена на последна трансакција', 'Мак.', 'Мин.']
+    for col in numeric_columns:
+        if col in data.columns:
+            data[col] = pd.to_numeric(data[col].str.replace(',', '.').str.replace(r'\.(?=\d*\.)', '', regex=True).str.replace(' ', ''), errors='coerce')
+    indicators = {
+        'RSI': lambda df: RSIIndicator(close=df['Цена на последна трансакција']).rsi(),
+        'Stochastic': lambda df: StochasticOscillator(high=df['Мак.'], low=df['Мин.'], close=df['Цена на последна трансакција']).stoch(),
+        'MACD': lambda df: MACD(close=df['Цена на последна трансакција']).macd(),
+        'SMA_20': lambda df: SMAIndicator(close=df['Цена на последна трансакција'], window=20).sma_indicator(),
+        'EMA_20': lambda df: EMAIndicator(close=df['Цена на последна трансакција'], window=20).ema_indicator(),
+        'SMA_50': lambda df: SMAIndicator(close=df['Цена на последна трансакција'], window=50).sma_indicator(),
+        'EMA_50': lambda df: EMAIndicator(close=df['Цена на последна трансакција'], window=50).ema_indicator(),
+        'CCI': lambda df: CCIIndicator(high=df['Мак.'], low=df['Мин.'], close=df['Цена на последна трансакција']).cci(),
+        'Bollinger_Upper': lambda df: BollingerBands(close=df['Цена на последна трансакција'], window=20, window_dev=2).bollinger_hband(),
+        'Bollinger_Lower': lambda df: BollingerBands(close=df['Цена на последна трансакција'], window=20, window_dev=2).bollinger_lband(),
+    }
+    for name, func in indicators.items():
+        data[name] = func(data)
+    return data.round(2)
+
 def main():
     start_time = time.time()
     names = scrape_issuer_names()
@@ -59,6 +80,7 @@ def main():
     data = load_existing_data()
     data = filter_data(data)
     data = sort_data(data)
+    data = apply_technical_indicators(data)
     data.to_csv('appliedIndicators.csv', index=False)
     print(f"Pipeline completed in {time.time() - start_time:.2f} seconds. Data saved to 'appliedIndicators.csv'.")
 
