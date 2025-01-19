@@ -52,25 +52,3 @@ def get_dropdown_values():
         return jsonify({"error": str(e)}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@app.route('/get_indicator_values', methods=['GET'])
-def get_indicator_values():
-    stock_name = request.args.get('stock_name')
-    if not stock_name:
-        return jsonify({"error": "Missing 'stock_name' query parameter"}), 400
-
-    try:
-        closest_date, stock_name, price, indicators = StockModel.get_indicator_values(stock_name)
-        return jsonify({
-            "date": closest_date.strftime('%d.%m.%Y'),
-            "stock_name": stock_name,
-            "price": price,
-            "indicators": indicators
-        })
-
-    except FileNotFoundError as e:
-        return jsonify({"error": str(e)}), 404
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
