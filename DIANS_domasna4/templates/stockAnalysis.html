@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analysis - DIANS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        header {
+            background-color: #3BBA9C;
+            color: white;
+        }
+
+        header a, header button {
+            color: white;
+            text-decoration: none;
+            background-color: transparent;
+            border: none;
+        }
+
+        header a:hover, header button:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background-color: #f8f9fa;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        body {
+            background-color: #2E3047;
+            color: white;
+        }
+
+        .content {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
+
+        .indicators {
+            width: 45%;
+            padding-right: 20px;
+        }
+
+        .result {
+            width: 45%;
+            padding-left: 20px;
+            font-size: 36px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .indicator-box {
+            margin-bottom: 20px;
+        }
+
+        .indicator-box label {
+            font-weight: bold;
+        }
+
+        .indicator-box input {
+            background-color: #2E3047;
+            color: white;
+            border: 1px solid #ddd;
+            width: 100%;
+            padding: 10px;
+        }
+
+        .buy-sell-indicator {
+            text-align: center;
+            font-size: 48px;
+        }
+
+        .buy {
+            color: green;
+        }
+
+        .sell {
+            color: red;
+        }
+
+        .hold {
+            color: yellow;
+        }
+
+        .additional-text {
+            margin-top: 30px;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .stock-price {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .row .col {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+<header class="d-flex justify-content-between align-items-center p-3">
+    <a href="index.html"><h1 class="ms-3">DIANS</h1></a>
+    <div class="me-3">
+        <button class="me-2" onclick="window.location.href='{{ url_for('index') }}'">Home</button>
+        <button class="me-2" onclick="window.location.href='{{ url_for('stock_analysis') }}'">Stock Analysis</button>
+        <button class="me-2" onclick="window.location.href='{{ url_for('contact') }}'">Contact</button>
+    </div>
+</header>
+
+<main class="container my-5">
+    <h2 class="text-center mb-4">Stock Analysis</h2>
+    <div class="content">
+        <div class="indicators">
+            <div class="indicator-box">
+                <label for="stock">Select Stock</label>
+                <select id="stock" class="form-select" onchange="updateAnalysis()">
+                </select>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="rsi">RSI</label>
+                        <input type="text" id="rsi" value="" disabled>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="cci">CCI</label>
+                        <input type="text" id="cci" value="" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="stochastic">Stochastic</label>
+                        <input type="text" id="stochastic" value="" disabled>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="macd">MACD</label>
+                        <input type="text" id="macd" value="" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="sma20">SMA (20)</label>
+                        <input type="text" id="sma20" value="" disabled>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="sma50">SMA (50)</label>
+                        <input type="text" id="sma50" value="" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="ema20">EMA (20)</label>
+                        <input type="text" id="ema20" value="" disabled>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="ema50">EMA (50)</label>
+                        <input type="text" id="ema50" value="" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="bollinger-upper">Bollinger Upper</label>
+                        <input type="text" id="bollinger-upper" value="" disabled>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="indicator-box">
+                        <label for="bollinger-lower">Bollinger Lower</label>
+                        <input type="text" id="bollinger-lower" value="" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="result">
+            <div id="stock-price" class="stock-price">
+            </div>
+            <div id="recommendation" class="buy-sell-indicator">
+                Hold
+            </div>
+            <div id="additional-text" class="additional-text">
+                Choose a stock from the dropdown to see the analysis.
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer style="color: #2E3047">
+    <p>&copy; 2024 DIANS</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function fetchStockOptions() {
+        fetch('/get_dropdown_values')
+            .then(response => response.json())
+            .then(data => {
+                const stockSelect = document.getElementById("stock");
+                stockSelect.innerHTML = ''; // Clear existing options
+
+                const defaultOption = document.createElement("option");
+                defaultOption.value = '';
+                defaultOption.textContent = '';
+                stockSelect.appendChild(defaultOption);
+
+                data.forEach(stock => {
+                    const option = document.createElement("option");
+                    option.value = stock;
+                    option.textContent = stock;
+                    stockSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error fetching stock options:", error));
+    }
+
+    function resetIndicators() {
+        const indicatorFields = [
+            "rsi", "cci", "stochastic", "macd",
+            "sma20", "sma50", "ema20", "ema50",
+            "bollinger-upper", "bollinger-lower"
+        ];
+
+        indicatorFields.forEach(fieldId => {
+            document.getElementById(fieldId).value = '';
+        });
+
+        const recommendationElement = document.getElementById("recommendation");
+        recommendationElement.textContent = 'Hold';
+        recommendationElement.className = 'buy-sell-indicator hold';
+
+        document.getElementById("additional-text").textContent = 'Choose a stock from the dropdown to see the analysis.';
+
+        const stockPriceElement = document.getElementById("stock-price");
+        stockPriceElement.textContent = '';
+    }
+
+    function updateAnalysis() {
+        const stockName = document.getElementById("stock").value;
+
+        if (!stockName) {
+            resetIndicators();
+            return;
+        }
+
+        fetch(`/get_indicator_values?stock_name=${stockName}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error || !data.indicators) {
+                    alert(data.error || "No data available for the selected stock.");
+                    resetIndicators();
+                    return;
+                }
+
+                // Populate indicator values
+                document.getElementById("rsi").value = data.indicators.RSI || '';
+                document.getElementById("cci").value = data.indicators.CCI || '';
+                document.getElementById("stochastic").value = data.indicators.Stochastic || '';
+                document.getElementById("macd").value = data.indicators.MACD || '';
+                document.getElementById("sma20").value = data.indicators.SMA_20 || '';
+                document.getElementById("sma50").value = data.indicators.SMA_50 || '';
+                document.getElementById("ema20").value = data.indicators.EMA_20 || '';
+                document.getElementById("ema50").value = data.indicators.EMA_50 || '';
+                document.getElementById("bollinger-upper").value = data.indicators.Bollinger_Upper || '';
+                document.getElementById("bollinger-lower").value = data.indicators.Bollinger_Lower || '';
+
+                const stockPriceElement = document.getElementById("stock-price");
+                if (data.price) {
+                    stockPriceElement.textContent = `${data.price} ден.`;
+                } else {
+                    stockPriceElement.textContent = '';
+                }
+
+                let recommendation = "Hold";
+                let buySignals = 0;
+                let sellSignals = 0;
+
+
+                if (data.indicators.RSI < 30) {
+                    buySignals++;
+                } else if (data.indicators.RSI > 70) {
+                    sellSignals++;
+                }
+
+                if (data.indicators.MACD > 0) {
+                    buySignals++;
+                } else if (data.indicators.MACD < 0) {
+                    sellSignals++;
+                }
+
+                if (data.indicators.SMA_20 > data.indicators.SMA_50) {
+                    buySignals++;
+                } else if (data.indicators.SMA_20 < data.indicators.SMA_50) {
+                    sellSignals++;
+                }
+
+                if (buySignals - sellSignals > 1) {
+                    recommendation = "Buy";
+                } else if (sellSignals - buySignals > 1) {
+                    recommendation = "Sell";
+                } else
+                    recommendation = "Hold";
+
+
+                const recommendationElement = document.getElementById("recommendation");
+                recommendationElement.textContent = recommendation;
+                recommendationElement.className = `buy-sell-indicator ${recommendation.toLowerCase()}`;
+
+                document.getElementById("additional-text").textContent = `Based on the analysis, we recommend you to ${recommendation}.`;
+            })
+            .catch(error => {
+                console.error("Error fetching stock data:", error);
+                resetIndicators();
+            });
+    }
+
+    fetchStockOptions();
+</script>
+</body>
+</html>
